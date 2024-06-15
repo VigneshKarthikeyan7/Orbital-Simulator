@@ -1,2 +1,4 @@
-# NavigationTools
-A bunch of tools for spacecraft navigation including state propagation and filtering. Also includes validation using historical data. 
+Orbital Propagation Codebase
+
+A bunch of tools for spacecraft navigation including state propagation
+Will take into account 3body perturbations, oblateness, and atmospheric drag
