@@ -8,10 +8,14 @@ def main():
     # Main function
     print("Starting Main Function")
     initial_position = np.array([7000,0,0])
+    
     initial_velocity = np.array([0, 7.72, 5])
     integration_time = 5*60*60
     steps = 100
     trajectory, times = propagation_tools.keplerian_propagator(initial_position, initial_velocity, integration_time, steps)
+
+    init_epic="Jan 1, 2020"
+    trajectory, times = propagation_tools.threebody_propagator(initial_position, initial_velocity, integration_time, steps, init_epic)
 
     # What does this look like
     # Plot it
