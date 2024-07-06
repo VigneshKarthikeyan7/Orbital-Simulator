@@ -1,9 +1,17 @@
 import numpy as np
 from scipy.integrate import solve_ivp
-
+import spiceypy as spice
 
 
 class propagation_tools:
+    def init_ephem(self):
+        """
+        Initialize the ephemeris files for EMS
+        """
+        # This is for the Cassini example, comment out later
+        #spice.furnsh("./Ephemeris/cassMetaK.txt")
+        # Furnish the kernals we actually need
+        spice.furnsh("./Ephemeris/ephemMeta.text")
 
     def keplerian_propagator(self, init_r, init_v, tof, steps):
         """
@@ -47,6 +55,7 @@ class propagation_tools:
         """
         Function to propagate a given orbit
         """
+        self.init_ephem()
         et=spice.str2et(init_epic)
         p={"ep0":et}
         # Time vector
@@ -74,8 +83,10 @@ class propagation_tools:
         current_epic=init_epic+t
         # Define r
         r = (x**2 + y**2 + z**2)**.5
-        res=[1,1,1]
-        rem=[1,1,1]
+        # Get vector from E to S
+        res, _ = spice.spkpos('Sun', current_epic, 'J2000', 'LT', 'Earth')
+        # Get vector from E to M
+        rem, _ = spice.spkpos('Moon', current_epic, 'J2000', 'LT', 'Earth')
         rssc=state[0:3]-res
         rmsc=state[0:3]-rem
         ax = -earth_nu*x/(r**3)-sun_nu*(rssc[0]/(np.linalg.norm(rssc)**3) +res[0]/(np.linalg.norm(res)**3))-moon_nu*(rmsc[0]/(np.linalg.norm(rmsc)**3) + rem[0]/(np.linalg.norm(rem)**3))
