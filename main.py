@@ -1,7 +1,7 @@
 # Main set of code that we will use to run everything
 import numpy as np
 from propagation_functions import propagation_tools
-import matplotlib.pyplot as plt
+import mathplotlib.pyplot as plt
 
 propagation_tools = propagation_tools()
 def main():
@@ -12,12 +12,17 @@ def main():
     initial_velocity = np.array([0, 7.72, 5])
     integration_time = 5*60*60
     steps = 100
+ 
+    theta = 30 # defined theta value as 30 for example. is it right?
+
+    U_J2 = propagation_tools.Jtwo_propogator(initial_position, initial_velocity,theta)
+
     trajectory, times = propagation_tools.keplerian_propagator(initial_position, initial_velocity, integration_time, steps)
 
     init_epic="Jan 1, 2020"
     trajectory, times = propagation_tools.threebody_propagator(initial_position, initial_velocity, integration_time, steps, init_epic)
 
-    # What does this look like
+    # What does this look like                      
     # Plot it
     fig = plt.figure()
     # Define axes in that figure

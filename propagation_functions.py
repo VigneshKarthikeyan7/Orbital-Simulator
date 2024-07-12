@@ -1,6 +1,6 @@
 import numpy as np
+import spicepy as spice
 from scipy.integrate import solve_ivp
-import spiceypy as spice
 
 
 class propagation_tools:
@@ -87,6 +87,8 @@ class propagation_tools:
         res, _ = spice.spkpos('Sun', current_epic, 'J2000', 'LT', 'Earth')
         # Get vector from E to M
         rem, _ = spice.spkpos('Moon', current_epic, 'J2000', 'LT', 'Earth')
+        res=[1,1,1]
+        rem=[1,1,1]
         rssc=state[0:3]-res
         rmsc=state[0:3]-rem
         ax = -earth_nu*x/(r**3)-sun_nu*(rssc[0]/(np.linalg.norm(rssc)**3) +res[0]/(np.linalg.norm(res)**3))-moon_nu*(rmsc[0]/(np.linalg.norm(rmsc)**3) + rem[0]/(np.linalg.norm(rem)**3))
@@ -100,3 +102,44 @@ class propagation_tools:
         dx = np.append(r_dot, v_dot)
 
         return dx
+    
+    def Jtwo_propagator(self, init_r, init_v, theta): 
+        """
+        Propogates accounting for Earth Oblateness
+        """
+        earth_nu = 398600.441500000
+        J2 = 0.00108264
+        earth_radius = 6378
+
+        init_state = np.concatenate((init_r,init_v)) 
+
+        x, y, z = init_state
+        r = (x**2 + y**2 + z**2)**.5
+
+        U_J2 = (earth_nu*J2*earth_radius/2*r**3)(1-3*(np.sin(theta))**2)
+
+        return U_J2
+
+    def Jtwo_eoms(self, init_r, init_v, theta):
+        """
+      Equations of Motion that account for Earth Oblateness  
+        """
+        earth_nu = 398600.441500000
+        J2 = 0.00108264
+        earth_radius = 6378
+        u_ECEF = (x,y,z)
+        U_J2 = self.Jtwo_propagator(init_r, init_v, theta)
+        init_state = np.concatenate((init_r,init_v)) 
+
+        x, y, z = init_state
+        r = (x**2 + y**2 + z**2)**.5
+        earth_div = earth_radius/r
+        ag_ECEF = (-earth_nu/r**2)*(u_ECEF)+ self.Sigma_calc(earth_nu, r, earth_radius, U_J2)
+
+    def Sigma_calc(self, earth_nu, r, earth_radius, U_J2):
+        J2 = 0.00108264
+        J3 = "?"
+        sum = 0
+        for l in range(2, float('inf')):
+            sum = sum + ((earth_nu*l)/r**2)*((earth_radius/r)**l)*U_J2
+        return sum
