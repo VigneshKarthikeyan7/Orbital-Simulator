@@ -1,7 +1,7 @@
 # Main set of code that we will use to run everything
 import numpy as np
 from propagation_functions import propagation_tools
-import mathplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 propagation_tools = propagation_tools()
 def main():
@@ -15,7 +15,7 @@ def main():
  
     theta = 30 # defined theta value as 30 for example. is it right?
 
-    U_J2 = propagation_tools.Jtwo_propogator(initial_position, initial_velocity,theta)
+    #U_J2 = propagation_tools.Jtwo_propogator(initial_position, initial_velocity,theta)
 
     trajectory, times = propagation_tools.keplerian_propagator(initial_position, initial_velocity, integration_time, steps)
 

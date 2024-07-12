@@ -1,5 +1,5 @@
 import numpy as np
-import spicepy as spice
+import spiceypy as spice
 from scipy.integrate import solve_ivp
 
 
@@ -11,7 +11,7 @@ class propagation_tools:
         # This is for the Cassini example, comment out later
         #spice.furnsh("./Ephemeris/cassMetaK.txt")
         # Furnish the kernals we actually need
-        spice.furnsh("./Ephemeris/ephemMeta.text")
+        spice.furnsh("./Ephemeris/ephemMeta.txt")
 
     def keplerian_propagator(self, init_r, init_v, tof, steps):
         """
