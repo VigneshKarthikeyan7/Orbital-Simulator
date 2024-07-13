@@ -90,13 +90,13 @@ class propagation_tools:
         rem, _ = spice.spkpos('Moon', current_epic, 'J2000', 'LT', 'Earth')
         res=[1,1,1]
         rem=[1,1,1]
-        rssc=state[0:3]-res
-        rmsc=state[0:3]-rem
-        ax = -earth_nu*x/(r**3)-sun_nu*(rssc[0]/(np.linalg.norm(rssc)**3) +res[0]/(np.linalg.norm(res)**3))-moon_nu*(rmsc[0]/(np.linalg.norm(rmsc)**3) + rem[0]/(np.linalg.norm(rem)**3))
+        rssc=state[0:3]-res/r
+        rmsc=state[0:3]-rem/r
+        ax = -earth_nu*x/r/(r**3)-sun_nu*(rssc[0]/(np.linalg.norm(rssc)**3) +res[0]/(np.linalg.norm(res)**3))-moon_nu*(rmsc[0]/(np.linalg.norm(rmsc)**3) + rem[0]/(np.linalg.norm(rem)**3))
 
-        ay = -earth_nu*y/(r**3)-sun_nu*(rssc[1]/(np.linalg.norm(rssc)**3) +res[1]/(np.linalg.norm(res)**3))-moon_nu*(rmsc[1]/(np.linalg.norm(rmsc)**3) + rem[1]/(np.linalg.norm(rem)**3))
+        ay = -earth_nu*y/r/(r**3)-sun_nu*(rssc[1]/(np.linalg.norm(rssc)**3) +res[1]/(np.linalg.norm(res)**3))-moon_nu*(rmsc[1]/(np.linalg.norm(rmsc)**3) + rem[1]/(np.linalg.norm(rem)**3))
 
-        az = -earth_nu*z/(r**3)-sun_nu*(rssc[2]/(np.linalg.norm(rssc)**3) +res[2]/(np.linalg.norm(res)**3))-moon_nu*(rmsc[2]/(np.linalg.norm(rmsc)**3) + rem[2]/(np.linalg.norm(rem)**3))
+        az = -earth_nu*z/r/(r**3)-sun_nu*(rssc[2]/(np.linalg.norm(rssc)**3) +res[2]/(np.linalg.norm(res)**3))-moon_nu*(rmsc[2]/(np.linalg.norm(rmsc)**3) + rem[2]/(np.linalg.norm(rem)**3))
 
         v_dot = np.array([ax, ay, az])
 

@@ -11,10 +11,11 @@ def main():
     
     initial_velocity = np.array([0, 7.72, 5])
     integration_time = 5*60*60
-    steps = 100
+    steps = 100                                                                     
  
-    theta = 30 # defined theta value as 30 for example. is it right?
+    theta = 30
 
+    ag_ECEF = propagation_tools.Jtwo_eoms(initial_position, initial_velocity,theta)
     U_J2 = propagation_tools.Jtwo_propogator(initial_position, initial_velocity,theta)
 
     trajectory, times = propagation_tools.keplerian_propagator(initial_position, initial_velocity, integration_time, steps)
