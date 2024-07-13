@@ -1,6 +1,6 @@
 import numpy as np
-import spicepy as spice
 from scipy.integrate import solve_ivp
+import spicepy as spice
 
 
 class propagation_tools:
@@ -127,19 +127,17 @@ class propagation_tools:
         earth_nu = 398600.441500000
         J2 = 0.00108264
         earth_radius = 6378
-        u_ECEF = (x,y,z)
+        # Creating a matrix
+        s=s
+        t=t
+        u=u
+        u_ECEF = np.array([s], [t], [u])
         U_J2 = self.Jtwo_propagator(init_r, init_v, theta)
         init_state = np.concatenate((init_r,init_v)) 
 
         x, y, z = init_state
         r = (x**2 + y**2 + z**2)**.5
-        earth_div = earth_radius/r
-        ag_ECEF = (-earth_nu/r**2)*(u_ECEF)+ self.Sigma_calc(earth_nu, r, earth_radius, U_J2)
 
-    def Sigma_calc(self, earth_nu, r, earth_radius, U_J2):
-        J2 = 0.00108264
-        J3 = "?"
-        sum = 0
-        for l in range(2, float('inf')):
-            sum = sum + ((earth_nu*l)/r**2)*((earth_radius/r)**l)*U_J2
-        return sum
+        ag_ECEF = (-earth_nu/r**2)*(u_ECEF)+ (earth_nu*J2/r**2)*(earth_radius/r)**2*U_J2
+       
+        return ag_ECEF
