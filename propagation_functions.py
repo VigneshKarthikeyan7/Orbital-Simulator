@@ -1,7 +1,6 @@
 import numpy as np
-import spicepy as spice
+import spiceypy as spice
 from scipy.integrate import solve_ivp
-import spicepy as spice
 
 
 class propagation_tools:
@@ -88,15 +87,15 @@ class propagation_tools:
         res, _ = spice.spkpos('Sun', current_epic, 'J2000', 'LT', 'Earth')
         # Get vector from E to M
         rem, _ = spice.spkpos('Moon', current_epic, 'J2000', 'LT', 'Earth')
-        res=[1,1,1]
-        rem=[1,1,1]
-        rssc=state[0:3]-res/r
-        rmsc=state[0:3]-rem/r
-        ax = -earth_nu*x/r/(r**3)-sun_nu*(rssc[0]/(np.linalg.norm(rssc)**3) +res[0]/(np.linalg.norm(res)**3))-moon_nu*(rmsc[0]/(np.linalg.norm(rmsc)**3) + rem[0]/(np.linalg.norm(rem)**3))
 
-        ay = -earth_nu*y/r/(r**3)-sun_nu*(rssc[1]/(np.linalg.norm(rssc)**3) +res[1]/(np.linalg.norm(res)**3))-moon_nu*(rmsc[1]/(np.linalg.norm(rmsc)**3) + rem[1]/(np.linalg.norm(rem)**3))
+        rssc = state[0:3]-res
+        rmsc = state[0:3]-rem
 
-        az = -earth_nu*z/r/(r**3)-sun_nu*(rssc[2]/(np.linalg.norm(rssc)**3) +res[2]/(np.linalg.norm(res)**3))-moon_nu*(rmsc[2]/(np.linalg.norm(rmsc)**3) + rem[2]/(np.linalg.norm(rem)**3))
+        ax = -earth_nu*x/(r**3)-sun_nu*(rssc[0]/(np.linalg.norm(rssc)**3) + res[0]/(np.linalg.norm(res)**3))-moon_nu*(rmsc[0]/(np.linalg.norm(rmsc)**3) + rem[0]/(np.linalg.norm(rem)**3))
+
+        ay = -earth_nu*y/(r**3) - sun_nu*(rssc[1]/(np.linalg.norm(rssc)**3) +res[1]/(np.linalg.norm(res)**3))-moon_nu*(rmsc[1]/(np.linalg.norm(rmsc)**3) + rem[1]/(np.linalg.norm(rem)**3))
+
+        az = -earth_nu*z/(r**3) - sun_nu*(rssc[2]/(np.linalg.norm(rssc)**3) +res[2]/(np.linalg.norm(res)**3))-moon_nu*(rmsc[2]/(np.linalg.norm(rmsc)**3) + rem[2]/(np.linalg.norm(rem)**3))
 
         v_dot = np.array([ax, ay, az])
 
@@ -104,41 +103,70 @@ class propagation_tools:
 
         return dx
     
-    def Jtwo_propagator(self, init_r, init_v, theta): 
+    def Jtwo_propagator(self, init_r, init_v, tof, steps, init_theta): 
         """
         Propogates accounting for Earth Oblateness
         """
+        # Time vector
+        tspan = [0, tof]
+        # Array of time values
+        tof_array = np.linspace(0,tof, num=steps)
+        # Need to add an extra term which is the rotation angle
+        init_state = np.concatenate((init_r,init_v,[init_theta]))
+        # Do th integration
+        sol = solve_ivp(fun = lambda t,x:self.Jtwo_eoms(t,x), t_span=tspan, y0=init_state, method="DOP853", t_eval=tof_array, rtol = 1e-12, atol = 1e-12)
+
+        # Return everything
+        return sol.y, sol.t
+
+    def Jtwo_eoms(self, t, state):
+        """
+        Equations of Motion that account for Earth Oblateness  
+        """
         earth_nu = 398600.441500000
         J2 = 0.00108264
-        earth_radius = 6378
-
-        init_state = np.concatenate((init_r,init_v)) 
-
-        x, y, z = init_state
-        r = (x**2 + y**2 + z**2)**.5
-
-        U_J2 = (earth_nu*J2*earth_radius/2*r**3)(1-3*(np.sin(theta))**2)
-
-        return U_J2
-
-    def Jtwo_eoms(self, init_r, init_v, theta):
-        """
-      Equations of Motion that account for Earth Oblateness  
-        """
-        earth_nu = 398600.441500000
-        J2 = 0.00108264
-        earth_radius = 6378
+        earth_radius = 6378.00
+        # First need to rotate our current position
+        # Only need to rotate position
+        r_ecef = self.rot3(state[0:3],state[6])
+        # Define variables
+        x, y, z = r_ecef
+        r_dot = state[3:6]
+        
+        # Define r
+        r = np.linalg.norm(r_ecef)
         # Creating a matrix
-        s=s
-        t=t
-        u=u
-        u_ECEF = np.array([s], [t], [u])
-        U_J2 = self.Jtwo_propagator(init_r, init_v, theta)
-        init_state = np.concatenate((init_r,init_v)) 
-
-        x, y, z = init_state
-        r = (x**2 + y**2 + z**2)**.5
-
-        ag_ECEF = (-earth_nu/r**2)*(u_ECEF)+ (earth_nu*J2/r**2)*(earth_radius/r)**2*U_J2
-       
-        return ag_ECEF
+        s=x/r
+        t=y/r
+        u=z/r
+        # U vector
+        u_ECEF = np.array([s, t, u])
+        # UJ2 term
+        U_J2 = (3/2)*np.array([5*s*u**2 - s, 5*t*u**2 - t, 5*u**3 - 3*u])
+        # Acceleration with everything
+        ag_ECEF = (-earth_nu/r**2)*(u_ECEF) + (earth_nu*J2/r**2)*(earth_radius/r)**2*U_J2
+        # Need to rotate acceleration back to ECI
+        A_ECI = self.rot3(ag_ECEF,-state[6])
+        # Also need the rotation rate of the Earth
+        theta_dot = 2*np.pi/(24*60*60)
+        temp = np.append(r_dot,A_ECI)
+        dx = np.append(temp, theta_dot)
+    
+        return dx
+    
+    def rot3(self, vec, xval):
+        """
+        Function to rotate a vector about the z axis by the angle theta
+        WARNING: Does a clockwise rotation instead of CCW
+        """
+        temp= vec[1]
+        c = np.cos( xval )
+        s = np.sin( xval )
+        # Predefine
+        outvec = np.array([0.0,0.0,0.0])
+        # Save the actual slots
+        outvec[1] = c*vec[1] - s*vec[0]
+        outvec[0] = c*vec[0] + s*temp
+        outvec[2] = vec[2]
+        # Return rotated vector
+        return outvec
