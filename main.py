@@ -15,6 +15,7 @@ def main():
  
     theta = 30
 
+    
     trajectory, times = propagation_tools.keplerian_propagator(initial_position, initial_velocity, integration_time, steps)
 
     init_epic="Jan 1, 2020"
@@ -23,6 +24,9 @@ def main():
     # Initial rotation relative to the Earth
     theta = np.pi/2
     trajectory_J2, times_J2 = propagation_tools.Jtwo_propagator(initial_position, initial_velocity, integration_time, steps, theta)
+    
+    # With Drag
+    trajectory_drag, times_drag = propagation_tools.drag_propagator(initial_position, initial_velocity, integration_time, steps)
 
     # What does this look like                      
     # Plot it
@@ -33,6 +37,7 @@ def main():
     ax.plot(trajectory[0],trajectory[1],trajectory[2],zorder=5)
     ax.plot(trajectory_threebody[0],trajectory_threebody[1],trajectory_threebody[2],zorder=5)
     ax.plot(trajectory_J2[0],trajectory_J2[1],trajectory_J2[2],zorder=5)
+    ax.plot(trajectory_drag[0],trajectory_drag[1],trajectory_drag[2],zorder=5)
     plt.title("All Orbits")
     ax.set_xlabel("X-axis (km)")
     ax.set_ylabel("Y-axis (km)")
@@ -54,13 +59,18 @@ def main():
         three_body_dif = np.abs(trajectory[i] - trajectory_threebody[i])
         ax.plot(times,three_body_dif,label=labels[i])
     # Get error from J2
-    """
+    
     # COMMENT OUT THIS BLOCK TO COMPARE
     labels = ['X Error J2', 'Y Error J2', 'Z Error J2']
     for i in range(3):
         J2_dif = np.abs(trajectory[i] - trajectory_J2[i])
         ax.plot(times,J2_dif,label=labels[i])
-    """
+
+    labels = ['X Error Drag', 'Y Error Drag', 'Z Error Drag']
+    for i in range(3):
+        Drag_dif = np.abs(trajectory[i] - trajectory_drag[i])
+        ax.plot(times,Drag_dif,label=labels[i])
+    
     plt.title("Error vs Time")
     plt.legend()
     ax.set_ylabel("Error (km)")

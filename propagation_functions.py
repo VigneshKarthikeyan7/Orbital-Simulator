@@ -11,7 +11,7 @@ class propagation_tools:
         # This is for the Cassini example, comment out later
         #spice.furnsh("./Ephemeris/cassMetaK.txt")
         # Furnish the kernals we actually need
-        spice.furnsh("./Ephemeris/ephemMeta.text")
+        spice.furnsh("./Ephemeris/ephemMeta.txt")
 
     def keplerian_propagator(self, init_r, init_v, tof, steps):
         """
@@ -171,23 +171,52 @@ class propagation_tools:
         # Return rotated vector
         return outvec
     
-    def drag_eoms(self, init_r, init_v, state):
+
+    def drag_propagator(self, init_r, init_v, tof, steps):
+        """
+        Function to propagate a given orbit
+        """
+        # Time vector
+        tspan = [0, tof]
+        # Array of time values
+        tof_array = np.linspace(0,tof, num=steps)
+        init_state = np.concatenate((init_r,init_v))
+        # Do th integration
+        sol = solve_ivp(fun = lambda t,x:self.drag_eoms(t,x), t_span=tspan, y0=init_state, method="DOP853", t_eval=tof_array, rtol = 1e-12, atol = 1e-12)
+
+        # Return everything
+        return sol.y, sol.t
+
+    def drag_eoms(self, t, state):
         """
         Function that calculates the effect of atmospheric drag on
         non-equatorial orbits
         """
+        earth_nu = 398600.441500000
         # C value chosen as 2
         C = 2
         # Altitude selected was 100 km
         p_r = 0.000000461
         # Pick a spherical area value
-        A = 10
+        A = 10e-3
         # Pick a mass
         m = 5
-        v_prime = r_dot
         # Extract values from init
         x, y, z, vx, vy, vz = state
         r_dot = np.array([vx, vy, vz])
-        a_drag=-(C/2)*p_r*(A/m)*(v_prime)**2*(v_prime/abs(v_prime))
+        v_prime = r_dot
+
+        # Define r
+        r = (x**2 + y**2 + z**2)**.5
+
+        ax = -earth_nu*x/(r**3)
+        ay = -earth_nu*y/(r**3)
+        az = -earth_nu*z/(r**3)
+
+        a_drag=-(C/2)*p_r*(A/m)*(v_prime)**2*(v_prime/np.linalg.norm(v_prime))
         
-        return a_drag
+        v_dot = [ax,ay,az] + a_drag
+
+        dx = np.append(r_dot, v_dot)
+
+        return dx
