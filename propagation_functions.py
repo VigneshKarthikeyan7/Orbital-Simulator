@@ -11,7 +11,7 @@ class propagation_tools:
         # This is for the Cassini example, comment out later
         #spice.furnsh("./Ephemeris/cassMetaK.txt")
         # Furnish the kernals we actually need
-        spice.furnsh("./Ephemeris/ephemMeta.txt")
+        spice.furnsh("./Ephemeris/ephemMeta.text")
 
     def keplerian_propagator(self, init_r, init_v, tof, steps):
         """
@@ -170,3 +170,24 @@ class propagation_tools:
         outvec[2] = vec[2]
         # Return rotated vector
         return outvec
+    
+    def drag_eoms(self, init_r, init_v, state):
+        """
+        Function that calculates the effect of atmospheric drag on
+        non-equatorial orbits
+        """
+        # C value chosen as 2
+        C = 2
+        # Altitude selected was 100 km
+        p_r = 0.000000461
+        # Pick a spherical area value
+        A = 10
+        # Pick a mass
+        m = 5
+        v_prime = r_dot
+        # Extract values from init
+        x, y, z, vx, vy, vz = state
+        r_dot = np.array([vx, vy, vz])
+        a_drag=-(C/2)*p_r*(A/m)*(v_prime)**2*(v_prime/abs(v_prime))
+        
+        return a_drag
