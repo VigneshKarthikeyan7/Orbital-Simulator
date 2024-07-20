@@ -53,30 +53,32 @@ def main():
     # With this plot, it should be easier to see the differences
     fig = plt.figure(1)
     ax = plt.axes()
+    
     labels = ['X Error 4B', 'Y Error 4B', 'Z Error 4B']
     # Get the x, y, and z error
     for i in range(3):
         three_body_dif = np.abs(trajectory[i] - trajectory_threebody[i])
         ax.plot(times,three_body_dif,label=labels[i])
     # Get error from J2
-    
+    """
     # COMMENT OUT THIS BLOCK TO COMPARE
     labels = ['X Error J2', 'Y Error J2', 'Z Error J2']
     for i in range(3):
         J2_dif = np.abs(trajectory[i] - trajectory_J2[i])
         ax.plot(times,J2_dif,label=labels[i])
-
+    """
     labels = ['X Error Drag', 'Y Error Drag', 'Z Error Drag']
     for i in range(3):
         Drag_dif = np.abs(trajectory[i] - trajectory_drag[i])
         ax.plot(times,Drag_dif,label=labels[i])
-    
+
     plt.title("Error vs Time")
     plt.legend()
     ax.set_ylabel("Error (km)")
     ax.set_xlabel("Time [sec]")
     plt.grid()
     plt.show()
+    plt.waitforbuttonpress
 
 
 
