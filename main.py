@@ -10,10 +10,10 @@ def main():
     initial_position = np.array([7000,0,0])
     
     initial_velocity = np.array([0, 7.72, 5])
-    integration_time = 5*60*60
+    integration_time = 24*60*60
     steps = 100                                                                     
  
-    theta = 30
+    theta = 90
 
     
     trajectory, times = propagation_tools.keplerian_propagator(initial_position, initial_velocity, integration_time, steps)
@@ -53,20 +53,20 @@ def main():
     # With this plot, it should be easier to see the differences
     fig = plt.figure(1)
     ax = plt.axes()
-    
+  
     labels = ['X Error 4B', 'Y Error 4B', 'Z Error 4B']
     # Get the x, y, and z error
     for i in range(3):
         three_body_dif = np.abs(trajectory[i] - trajectory_threebody[i])
         ax.plot(times,three_body_dif,label=labels[i])
     # Get error from J2
-    """
+
     # COMMENT OUT THIS BLOCK TO COMPARE
     labels = ['X Error J2', 'Y Error J2', 'Z Error J2']
     for i in range(3):
         J2_dif = np.abs(trajectory[i] - trajectory_J2[i])
         ax.plot(times,J2_dif,label=labels[i])
-    """
+
     labels = ['X Error Drag', 'Y Error Drag', 'Z Error Drag']
     for i in range(3):
         Drag_dif = np.abs(trajectory[i] - trajectory_drag[i])
